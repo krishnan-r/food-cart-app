@@ -8,6 +8,8 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.jdbc.JDBCClient;
+import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -16,10 +18,12 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.util.logging.Level.INFO;
+
 public class HttpVerticle extends AbstractVerticle {
 
     private static final Logger logger = Logger.getLogger(HttpVerticle.class.getName());
-
+     JDBCClient client;
     private void failureHandler(RoutingContext handler) {
         HttpServerResponse response = handler.response();
         response.putHeader("content-type", "application/json; charset=utf-8");
@@ -31,62 +35,54 @@ public class HttpVerticle extends AbstractVerticle {
             result.put("message", handler.failure().toString());
         response.end(Json.encode(result));
     }
-    protected static Connection initializeDatabase() throws SQLException, ClassNotFoundException    {
-        String dbDriver = "com.mysql.cj.jdbc.Driver";
-        String dbURL = "jdbc:mysql:// localhost:3306/";
-        String dbName = "foodcart";
-        String dbUsername = "root";
-        String dbPassword = "";
-
-        Class.forName(dbDriver);
-        Connection con = DriverManager.getConnection(dbURL + dbName,dbUsername,dbPassword);
-        return con;
-    }
-    private boolean verifyUser(String user, String password){
-        try {
-            Connection conn = initializeDatabase();
-            System.out.println("Connection Established");
-            PreparedStatement stmt = conn.prepareStatement("select password from customer_details where employee_id= ?");
-            stmt.setString(1,user);
-            // stmt.execute("insert into customer_details (name, employee_id,password, mobile,email,verified) values ('sushma','E1','qwer','9553488444','as45@iitbbs.ac.in',0)");
-            ResultSet res = stmt.executeQuery();
-            while(res.next()){
-                String pass = res.getString("password");
-                if(password.equals(pass)) {
-                    conn.close();
-                    return true;
-                }
-
-            }
-            conn.close();
-
-        }
-        catch (Exception e){
-            System.out.print("Error connecting to Database "+e.getMessage());
-        }
-        return false;
+    protected  void initializeDatabase()    {
+        JsonObject config = new JsonObject()
+                .put("url", "jdbc:mysql:// localhost:3306/foodcart")
+                .put("driver_class", "com.mysql.cj.jdbc.Driver")
+                .put("user", "root")
+                .put("password", "");
+         client = JDBCClient.createShared(vertx, config);
     }
 
     private void loginHandler(RoutingContext context) {
-        logger.log(Level.INFO, "loginHandler request received");
+        logger.log(INFO, "loginHandler request received");
         JsonObject params = context.getBodyAsJson();
         if (!params.containsKey("username") || !params.containsKey("password")) {
             context.fail(1);
         } else {
-            // Authentication
-            boolean authenticate = verifyUser(params.getString("username"),params.getString("password"));
-           if(authenticate) {
-               HttpServerResponse response = context.response();
-               response.putHeader("content-type", "application/json; charset=utf-8");
-               JsonObject js = new JsonObject();
-               js.put("logged_in", true);
-               js.put("token", "ABCD");
-               String json = Json.encode(js);
-               response.end(json);
-           }
-           else{
-               logger.log(Level.INFO, "Authentication Failed");
-           }
+            //Authentication
+
+            client.getConnection(res1 -> {
+                if (res1.succeeded()) {
+                    SQLConnection conn = res1.result();
+                    System.out.println(" Database Connected! ");
+                    String query = "select password from customer_details where employee_id=?";
+                    String username = params.getValue("username").toString();
+                    String password = params.getValue("password").toString();
+                    JsonArray parameters = new JsonArray().add(username);
+
+                    conn.queryWithParams(query,parameters,res->{
+                        if(res.succeeded()){
+                            JsonArray actualPassword = res.result().getResults().get(0);
+                            if(password.equals(actualPassword.toString())){
+                                HttpServerResponse response = context.response();
+                                response.putHeader("content-type", "application/json; charset=utf-8");
+                                JsonObject js = new JsonObject();
+                                js.put("logged_in", true);
+                                js.put("token", "ABCD");
+                                String json = Json.encode(js);
+                                response.end(json);
+
+                            }
+
+                            else{
+                                logger.log(Level.INFO,"Failed to authenticate");
+                            }
+                        }
+                    });
+                }
+
+            });
         }
     }
 
@@ -121,7 +117,7 @@ public class HttpVerticle extends AbstractVerticle {
         Future<Void> future = Future.future();
 
         HttpServer server = vertx.createHttpServer();
-
+        initializeDatabase();
         Router router = Router.router(vertx);
         router.route().failureHandler(this::failureHandler);
         router.route().handler(BodyHandler.create());
@@ -131,7 +127,7 @@ public class HttpVerticle extends AbstractVerticle {
 
 
         server.requestHandler(router);
-        server.listen(config().getInteger("port", 83), ar -> {
+        server.listen(config().getInteger("port", 80), ar -> {
             if (ar.succeeded()) {
                 logger.log(Level.INFO, "HttpVerticle initialization completed.");
                 future.complete();
