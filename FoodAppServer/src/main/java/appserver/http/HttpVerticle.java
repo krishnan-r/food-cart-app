@@ -14,38 +14,36 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
-import java.sql.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static java.util.logging.Level.INFO;
 
 public class HttpVerticle extends AbstractVerticle {
 
     private static final Logger logger = Logger.getLogger(HttpVerticle.class.getName());
-     JDBCClient client;
+    JDBCClient client;
+
     private void failureHandler(RoutingContext handler) {
         HttpServerResponse response = handler.response();
         response.putHeader("content-type", "application/json; charset=utf-8");
         JsonObject result = new JsonObject();
         result.put("status", "error");
-        if(handler.failure()==null)
-            result.put("message","Error 404 invalid endpoint");
+        if (handler.failure() == null)
+            result.put("message", "Error 404 invalid endpoint");
         else
             result.put("message", handler.failure().toString());
         response.end(Json.encode(result));
     }
-    protected  void initializeDatabase()    {
+
+    protected void initializeDatabase() {
         JsonObject config = new JsonObject()
-                .put("url", "jdbc:mysql:// localhost:3306/foodcart")
+                .put("url", "jdbc:mysql://localhost:3306/foodcart")
                 .put("driver_class", "com.mysql.cj.jdbc.Driver")
                 .put("user", "root")
-                .put("password", "");
-         client = JDBCClient.createShared(vertx, config);
+                .put("password", "example");
+        client = JDBCClient.createShared(vertx, config);
     }
 
     private void loginHandler(RoutingContext context) {
-        logger.log(INFO, "loginHandler request received");
+        logger.info("loginHandler request received");
         JsonObject params = context.getBodyAsJson();
         if (!params.containsKey("username") || !params.containsKey("password")) {
             context.fail(1);
@@ -55,28 +53,26 @@ public class HttpVerticle extends AbstractVerticle {
             client.getConnection(res1 -> {
                 if (res1.succeeded()) {
                     SQLConnection conn = res1.result();
-                    System.out.println(" Database Connected! ");
+                    logger.info(" Database Connected! ");
                     String query = "select password from customer_details where employee_id=?";
                     String username = params.getValue("username").toString();
                     String password = params.getValue("password").toString();
                     JsonArray parameters = new JsonArray().add(username);
 
-                    conn.queryWithParams(query,parameters,res->{
-                        if(res.succeeded()){
+                    conn.queryWithParams(query, parameters, res -> {
+                        if (res.succeeded()) {
                             JsonArray actualPassword = res.result().getResults().get(0);
-                            if(password.equals(actualPassword.toString())){
+                            if (password.equals(actualPassword.toString())) {
                                 HttpServerResponse response = context.response();
                                 response.putHeader("content-type", "application/json; charset=utf-8");
                                 JsonObject js = new JsonObject();
                                 js.put("logged_in", true);
-                                js.put("token", "ABCD");
+                                js.put("token", "ABCD"); //TODO Use some token mechanism for authenticating subsequent requests..
                                 String json = Json.encode(js);
                                 response.end(json);
 
-                            }
-
-                            else{
-                                logger.log(Level.INFO,"Failed to authenticate");
+                            } else {
+                                logger.info("Failed to authenticate");
                             }
                         }
                     });
@@ -88,7 +84,7 @@ public class HttpVerticle extends AbstractVerticle {
 
     private void listItems(RoutingContext context) {
         // TODO Query Database Here
-        logger.log(Level.INFO, "list items request received");
+        logger.info("list items request received");
         HttpServerResponse response = context.response();
         response.putHeader("content-type", "application/json; charset=utf-8");
         JsonArray jsonResult = new JsonArray();
@@ -101,7 +97,7 @@ public class HttpVerticle extends AbstractVerticle {
         item.put("rating", 3.5);
         item.put("description", "Tasty delicious italian pizza with cheese and toppings baked to perfection.");
         item.put("rating_count", 250);
-        item.put("price",250);
+        item.put("price", 250);
 
 
         for (int i = 0; i < 10; i++) {
@@ -129,7 +125,7 @@ public class HttpVerticle extends AbstractVerticle {
         server.requestHandler(router);
         server.listen(config().getInteger("port", 80), ar -> {
             if (ar.succeeded()) {
-                logger.log(Level.INFO, "HttpVerticle initialization completed.");
+                logger.info("HttpVerticle initialization completed.");
                 future.complete();
             } else {
                 future.fail(ar.cause());
@@ -144,7 +140,7 @@ public class HttpVerticle extends AbstractVerticle {
     }
 
     public static void main(String[] args) {
-        logger.log(Level.INFO, "Starting FoodApp Vert.x Server");
+        logger.info("Starting FoodApp Vert.x Server");
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new HttpVerticle());
     }
