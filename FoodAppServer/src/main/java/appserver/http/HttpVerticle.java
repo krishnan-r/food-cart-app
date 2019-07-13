@@ -14,7 +14,16 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +33,131 @@ public class HttpVerticle extends AbstractVerticle {
 
     private static final Logger logger = Logger.getLogger(HttpVerticle.class.getName());
      JDBCClient client;
+
+    private byte[] hashToCheck(String password,byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeySpec specUnHash = new PBEKeySpec(password.toCharArray(),salt, 65536,128);
+        SecretKeyFactory factoryUnhash = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        byte[] unhash = factoryUnhash.generateSecret(specUnHash).getEncoded();
+        return unhash;
+    }
+
+    private ArrayList<byte[]> hashToStore(String password) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        byte[] hash = factory.generateSecret(spec).getEncoded();
+        ArrayList<byte[]>  passwordSalt = new ArrayList<byte[]>();
+        passwordSalt.add(hash);
+        passwordSalt.add(salt);
+        return passwordSalt;
+    }
+
+    private void insertIntoDatabase(String name, String employee_id, String password,String mobile,String email,boolean verified) {
+        JsonObject config = new JsonObject()
+                .put("url", "jdbc:mysql:// localhost:3306/foodcart")
+                .put("driver_class", "com.mysql.cj.jdbc.Driver")
+                .put("user", "root")
+                .put("password", "");
+        JDBCClient client = JDBCClient.createShared(vertx, config);
+        client.getConnection(res1 -> {
+            if (res1.succeeded()) {
+                SQLConnection conn = res1.result();
+                try {
+                    ArrayList<byte[]> passHash = hashToStore(password);
+                    byte[] hashedPassword = passHash.get(0);
+                    byte[] salt = passHash.get(1);
+                    JsonArray parameters = new JsonArray()
+                            .add(name)
+                            .add(employee_id)
+                            .add(hashedPassword)
+                            .add(Integer.parseInt(mobile))
+                            .add(email).add(verified).add(salt);
+                    String query = "insert into  customer_details values(?,?,?,?,?,?,?) ";
+                    conn.updateWithParams(query,parameters,res->{
+                        if(res.succeeded()){
+                            logger.log(Level.INFO,"User Succesfully signed up!");
+                        }
+                        else{
+                            logger.log(Level.INFO,"Unable to register user : "+res.cause());
+                        }
+                    });
+
+                }
+                catch(Exception e){
+                    logger.log(Level.INFO,"Couldn't connect to Database: "+e.getMessage());
+                }
+
+
+            }
+        });
+    }
+
+    private void loginHandler(RoutingContext context) {
+        logger.log(INFO, "loginHandler request received");
+        JsonObject params = context.getBodyAsJson();
+        String username = params.getValue("username").toString();
+        String password = params.getValue("password").toString();
+        HttpServerResponse response = context.response();
+        response.putHeader("content-type", "application/json; charset=utf-8");
+        if (!params.containsKey("username") || !params.containsKey("password")) {
+            context.fail(1);
+        }
+        else {
+            //Authentication
+            JsonObject js = new JsonObject();
+            JsonObject config = new JsonObject()
+                    .put("url", "jdbc:mysql:// localhost:3306/foodcart")
+                    .put("driver_class", "com.mysql.cj.jdbc.Driver")
+                    .put("user", "root")
+                    .put("password", "");
+            JDBCClient client = JDBCClient.createShared(vertx, config);
+            client.getConnection(res1 -> {
+                if (res1.succeeded()) {
+                    if (res1.succeeded()) {
+                        SQLConnection conn = res1.result();
+                        System.out.println(" Database Connected! ");
+                        String query = "select password,salt from customer_details where employee_id=?";
+                        JsonArray parameters = new JsonArray().add(username);
+
+                        conn.queryWithParams(query,parameters,res->{
+                            if(res.succeeded()){
+                                JsonArray actualPassword = res.result().getResults().get(0);
+                                byte[] actualPasswordHash = actualPassword.getBinary(0);
+                                byte[] salt = actualPassword.getBinary(1);
+                                try {
+                                    byte[] givenHash = hashToCheck(password, salt);
+                                    if(Arrays.equals(givenHash,actualPasswordHash)){
+                                        logger.log(Level.INFO,"Authenticated !");
+                                        js.put("logged_in", true);
+                                        js.put("token", "ABCD");
+                                        String json = Json.encode(js);
+                                        response.end(json);
+                                    }
+                                    else{
+                                        js.put("logged_in",false);
+                                        js.put("msg","Invalid Username or Password");
+                                        String json = Json.encode(js);
+                                        response.end(json);
+                                       logger.log(Level.INFO,"Failed to authenticate");
+                                    }
+                                }
+                                catch(Exception e){
+                                    logger.log(Level.INFO,e.getMessage());
+                                    js.put("msg","Invalid Username or password");
+                                    String json = Json.encode(js);
+                                    response.end(json);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+
     private void failureHandler(RoutingContext handler) {
         HttpServerResponse response = handler.response();
         response.putHeader("content-type", "application/json; charset=utf-8");
@@ -41,49 +175,7 @@ public class HttpVerticle extends AbstractVerticle {
                 .put("driver_class", "com.mysql.cj.jdbc.Driver")
                 .put("user", "root")
                 .put("password", "");
-         client = JDBCClient.createShared(vertx, config);
-    }
-
-    private void loginHandler(RoutingContext context) {
-        logger.log(INFO, "loginHandler request received");
-        JsonObject params = context.getBodyAsJson();
-        if (!params.containsKey("username") || !params.containsKey("password")) {
-            context.fail(1);
-        } else {
-            //Authentication
-
-            client.getConnection(res1 -> {
-                if (res1.succeeded()) {
-                    SQLConnection conn = res1.result();
-                    System.out.println(" Database Connected! ");
-                    String query = "select password from customer_details where employee_id=?";
-                    String username = params.getValue("username").toString();
-                    String password = params.getValue("password").toString();
-                    JsonArray parameters = new JsonArray().add(username);
-
-                    conn.queryWithParams(query,parameters,res->{
-                        if(res.succeeded()){
-                            JsonArray actualPassword = res.result().getResults().get(0);
-                            if(password.equals(actualPassword.toString())){
-                                HttpServerResponse response = context.response();
-                                response.putHeader("content-type", "application/json; charset=utf-8");
-                                JsonObject js = new JsonObject();
-                                js.put("logged_in", true);
-                                js.put("token", "ABCD");
-                                String json = Json.encode(js);
-                                response.end(json);
-
-                            }
-
-                            else{
-                                logger.log(Level.INFO,"Failed to authenticate");
-                            }
-                        }
-                    });
-                }
-
-            });
-        }
+        client = JDBCClient.createShared(vertx, config);
     }
 
     private void listItems(RoutingContext context) {
