@@ -3,6 +3,7 @@ package appserver.http;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
@@ -15,6 +16,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -34,7 +36,7 @@ public class HttpVerticle extends AbstractVerticle {
                 .put("url", "jdbc:mysql://localhost:3306/foodcart")
                 .put("driver_class", "com.mysql.cj.jdbc.Driver")
                 .put("user", "root")
-                .put("password", "example");
+                .put("password","");
         client = JDBCClient.createShared(vertx, config);
     }
     private void failureHandler(RoutingContext handler) {
@@ -49,25 +51,46 @@ public class HttpVerticle extends AbstractVerticle {
         response.end(Json.encode(result));
     }
 
-
-
-    private byte[] hashToCheck(String password,byte[] salt) throws  InvalidKeySpecException,NoSuchAlgorithmException {
-        KeySpec specUnHash = new PBEKeySpec(password.toCharArray(),salt, 65536,128);
-        SecretKeyFactory factoryUnhash = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        byte[] unhash = factoryUnhash.generateSecret(specUnHash).getEncoded();
-        return unhash;
+    private static String toStringInHex(byte[] array) throws NoSuchAlgorithmException
+    {
+        BigInteger bi = new BigInteger(1, array);
+        String hex = bi.toString(16);
+        int paddingLength = (array.length * 2) - hex.length();
+        if(paddingLength > 0)
+        {
+            return String.format("%0"  +paddingLength + "d", 0) + hex;
+        }else{
+            return hex;
+        }
     }
 
-    private ArrayList<byte[]> hashToStore(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private static byte[] fromHexStringToBytes(String hex) throws NoSuchAlgorithmException
+    {
+        byte[] bytes = new byte[hex.length() / 2];
+        for(int i = 0; i<bytes.length ;i++)
+        {
+            bytes[i] = (byte)Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
+        }
+        return bytes;
+    }
+
+    private String hashToCheck(String password,byte[] salt) throws  InvalidKeySpecException,NoSuchAlgorithmException {
+        KeySpec specHashCheck = new PBEKeySpec(password.toCharArray(),salt, 65536,128);
+        SecretKeyFactory factoryHashCheck = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        byte[] hashCheck = factoryHashCheck.generateSecret(specHashCheck).getEncoded();
+        return toStringInHex(hashCheck);
+    }
+
+    private ArrayList<String> hashToStore(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
         random.nextBytes(salt);
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] hash = factory.generateSecret(spec).getEncoded();
-        ArrayList<byte[]>  passwordSalt = new ArrayList<byte[]>();
-        passwordSalt.add(hash);
-        passwordSalt.add(salt);
+        ArrayList<String>  passwordSalt = new ArrayList<String>();
+        passwordSalt.add(toStringInHex(hash));
+        passwordSalt.add(toStringInHex(salt));
         return passwordSalt;
     }
 
@@ -77,9 +100,9 @@ public class HttpVerticle extends AbstractVerticle {
             if (res1.succeeded()) {
                 SQLConnection conn = res1.result();
                 try {
-                    ArrayList<byte[]> passHash = hashToStore(password);
-                    byte[] hashedPassword = passHash.get(0);
-                    byte[] salt = passHash.get(1);
+                    ArrayList<String> passHash = hashToStore(password);
+                    String hashedPassword = passHash.get(0);
+                    String salt = passHash.get(1);
                     JsonArray parameters = new JsonArray()
                             .add(name)
                             .add(employee_id)
@@ -109,40 +132,44 @@ public class HttpVerticle extends AbstractVerticle {
     private void loginHandler(RoutingContext context) {
         logger.info("loginHandler request received");
         JsonObject params = context.getBodyAsJson();
-        String username = params.getValue("username").toString();
-        String password = params.getValue("password").toString();
+
         HttpServerResponse response = context.response();
         response.putHeader("content-type", "application/json; charset=utf-8");
         if (!params.containsKey("username") || !params.containsKey("password")) {
+            response.end("Credentials not filled");
             context.fail(1);
         }
         else {
+            String username = params.getValue("username").toString();
+            String password = params.getValue("password").toString();
             //Authentication
-
-            client.getConnection(res1 -> {
+          client.getConnection(res1 -> {
                 if (res1.succeeded()) {
                         SQLConnection conn = res1.result();
-                        System.out.println(" Database Connected! ");
+                        logger.log(Level.INFO,"Successfully connected to the database");
                         String query = "select password,salt from customer_details where employee_id=?";
                         JsonArray parameters = new JsonArray().add(username);
                         JsonObject js = new JsonObject();
                         conn.queryWithParams(query,parameters,res->{
                             if(res.succeeded()){
                                 JsonArray actualPassword = res.result().getResults().get(0);
-                                byte[] actualPasswordHash = actualPassword.getBinary(0);
-                                byte[] salt = actualPassword.getBinary(1);
-                                try {
-                                    byte[] givenHash = hashToCheck(password, salt);
-                                    if(Arrays.equals(givenHash,actualPasswordHash)){
+                               String actualPasswordHash = actualPassword.getString(0);
+                               String salt = actualPassword.getString(1);
+                                 try {
+                                    String givenHash = hashToCheck(password, fromHexStringToBytes(salt));
+                                    if(actualPasswordHash.equals(givenHash)){
                                         logger.log(Level.INFO,"Authenticated !");
+                                        js.put("message","Authenticated");
                                         js.put("logged_in", true);
                                         js.put("token", "ABCD");
+
                                         String json = Json.encode(js);
                                         response.end(json);
                                     }
                                     else{
                                         js.put("logged_in",false);
-                                        js.put("msg","Invalid Username or Password");
+                                        js.put("message","Invalid Username or Password");
+                                        js.put("token","null");
                                         String json = Json.encode(js);
                                         response.end(json);
                                        logger.log(Level.INFO,"Failed to authenticate");
@@ -150,14 +177,15 @@ public class HttpVerticle extends AbstractVerticle {
                                 }
                                 catch(Exception e){
                                     logger.log(Level.INFO,e.getMessage());
-                                    js.put("msg","Invalid Username or password");
+                                    js.put("message","Invalid Username or password");
+                                    js.put("logged_in",false);
+                                    js.put("token","null");
                                     String json = Json.encode(js);
                                     response.end(json);
                                 }
                             }
                         });
                 }
-
 
             });
         }
@@ -192,16 +220,15 @@ public class HttpVerticle extends AbstractVerticle {
 
     private Future<Void> startHttpServer() {
         Future<Void> future = Future.future();
-
         HttpServer server = vertx.createHttpServer();
         initializeDatabase();
         Router router = Router.router(vertx);
         router.route().failureHandler(this::failureHandler);
-        router.route().handler(BodyHandler.create());
+        router.route("/api/login").handler(BodyHandler.create());
         router.post("/api/login").handler(this::loginHandler);
         router.get("/api/list").handler(this::listItems);
         router.route().last().handler(this::failureHandler);
-
+//    insertIntoDatabase("User1","E1","user1Password","123456789","user1Email@gmail.com",false);
 
         server.requestHandler(router);
         server.listen(config().getInteger("port", 86), ar -> {

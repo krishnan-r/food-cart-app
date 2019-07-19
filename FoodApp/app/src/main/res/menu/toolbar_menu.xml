@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <item
+        android:id="@+id/action_login"
+        android:icon="@drawable/ic_baseline_account_circle_24px"
+        android:title="Login"
+        android:orderInCategory="300"
+        app:showAsAction="always" />
     <item
         android:icon="@drawable/ic_shopping_cart"
         android:title="Cart"
+        android:orderInCategory="200"
         app:showAsAction="always" />
+
 </menu>
