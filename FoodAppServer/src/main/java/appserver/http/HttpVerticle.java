@@ -14,6 +14,7 @@ import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import java.math.BigInteger;
@@ -36,9 +37,10 @@ public class HttpVerticle extends AbstractVerticle {
                 .put("url", "jdbc:mysql://localhost:3306/foodcart")
                 .put("driver_class", "com.mysql.cj.jdbc.Driver")
                 .put("user", "root")
-                .put("password","");
+                .put("password", "");
         client = JDBCClient.createShared(vertx, config);
     }
+
     private void failureHandler(RoutingContext handler) {
         HttpServerResponse response = handler.response();
         response.putHeader("content-type", "application/json; charset=utf-8");
@@ -51,31 +53,27 @@ public class HttpVerticle extends AbstractVerticle {
         response.end(Json.encode(result));
     }
 
-    private static String toStringInHex(byte[] array) throws NoSuchAlgorithmException
-    {
+    private static String toStringInHex(byte[] array) throws NoSuchAlgorithmException {
         BigInteger bi = new BigInteger(1, array);
         String hex = bi.toString(16);
         int paddingLength = (array.length * 2) - hex.length();
-        if(paddingLength > 0)
-        {
-            return String.format("%0"  +paddingLength + "d", 0) + hex;
-        }else{
+        if (paddingLength > 0) {
+            return String.format("%0" + paddingLength + "d", 0) + hex;
+        } else {
             return hex;
         }
     }
 
-    private static byte[] fromHexStringToBytes(String hex) throws NoSuchAlgorithmException
-    {
+    private static byte[] fromHexStringToBytes(String hex) throws NoSuchAlgorithmException {
         byte[] bytes = new byte[hex.length() / 2];
-        for(int i = 0; i<bytes.length ;i++)
-        {
-            bytes[i] = (byte)Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
         }
         return bytes;
     }
 
-    private String hashToCheck(String password,byte[] salt) throws  InvalidKeySpecException,NoSuchAlgorithmException {
-        KeySpec specHashCheck = new PBEKeySpec(password.toCharArray(),salt, 65536,128);
+    private String hashToCheck(String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        KeySpec specHashCheck = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
         SecretKeyFactory factoryHashCheck = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] hashCheck = factoryHashCheck.generateSecret(specHashCheck).getEncoded();
         return toStringInHex(hashCheck);
@@ -88,13 +86,13 @@ public class HttpVerticle extends AbstractVerticle {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] hash = factory.generateSecret(spec).getEncoded();
-        ArrayList<String>  passwordSalt = new ArrayList<String>();
+        ArrayList<String> passwordSalt = new ArrayList<String>();
         passwordSalt.add(toStringInHex(hash));
         passwordSalt.add(toStringInHex(salt));
         return passwordSalt;
     }
 
-    private void insertIntoDatabase(String name, String employee_id, String password,String mobile,String email,boolean verified) {
+    private void insertIntoDatabase(String name, String employee_id, String password, String mobile, String email, boolean verified) {
 
         client.getConnection(res1 -> {
             if (res1.succeeded()) {
@@ -110,18 +108,16 @@ public class HttpVerticle extends AbstractVerticle {
                             .add(Integer.parseInt(mobile))
                             .add(email).add(verified).add(salt);
                     String query = "insert into  customer_details values(?,?,?,?,?,?,?) ";
-                    conn.updateWithParams(query,parameters,res->{
-                        if(res.succeeded()){
-                            logger.log(Level.INFO,"User Succesfully signed up!");
-                        }
-                        else{
-                            logger.log(Level.INFO,"Unable to register user : "+res.cause());
+                    conn.updateWithParams(query, parameters, res -> {
+                        if (res.succeeded()) {
+                            logger.log(Level.INFO, "User Succesfully signed up!");
+                        } else {
+                            logger.log(Level.INFO, "Unable to register user : " + res.cause());
                         }
                     });
 
-                }
-                catch(Exception e){
-                    logger.log(Level.INFO,"Couldn't connect to Database: "+e.getMessage());
+                } catch (Exception e) {
+                    logger.log(Level.INFO, "Couldn't connect to Database: " + e.getMessage());
                 }
 
 
@@ -138,53 +134,50 @@ public class HttpVerticle extends AbstractVerticle {
         if (!params.containsKey("username") || !params.containsKey("password")) {
             response.end("Credentials not filled");
             context.fail(1);
-        }
-        else {
+        } else {
             String username = params.getValue("username").toString();
             String password = params.getValue("password").toString();
             //Authentication
-          client.getConnection(res1 -> {
+            client.getConnection(res1 -> {
                 if (res1.succeeded()) {
-                        SQLConnection conn = res1.result();
-                        logger.log(Level.INFO,"Successfully connected to the database");
-                        String query = "select password,salt from customer_details where employee_id=?";
-                        JsonArray parameters = new JsonArray().add(username);
-                        JsonObject js = new JsonObject();
-                        conn.queryWithParams(query,parameters,res->{
-                            if(res.succeeded()){
-                                JsonArray actualPassword = res.result().getResults().get(0);
-                               String actualPasswordHash = actualPassword.getString(0);
-                               String salt = actualPassword.getString(1);
-                                 try {
-                                    String givenHash = hashToCheck(password, fromHexStringToBytes(salt));
-                                    if(actualPasswordHash.equals(givenHash)){
-                                        logger.log(Level.INFO,"Authenticated !");
-                                        js.put("message","Authenticated");
-                                        js.put("logged_in", true);
-                                        js.put("token", "ABCD");
+                    SQLConnection conn = res1.result();
+                    logger.log(Level.INFO, "Successfully connected to the database");
+                    String query = "select password,salt from customer_details where employee_id=?";
+                    JsonArray parameters = new JsonArray().add(username);
+                    JsonObject js = new JsonObject();
+                    conn.queryWithParams(query, parameters, res -> {
+                        if (res.succeeded()) {
+                            JsonArray actualPassword = res.result().getResults().get(0);
+                            String actualPasswordHash = actualPassword.getString(0);
+                            String salt = actualPassword.getString(1);
+                            try {
+                                String givenHash = hashToCheck(password, fromHexStringToBytes(salt));
+                                if (actualPasswordHash.equals(givenHash)) {
+                                    logger.log(Level.INFO, "Authenticated !");
+                                    js.put("message", "Authenticated");
+                                    js.put("logged_in", true);
+                                    js.put("token", "ABCD");
 
-                                        String json = Json.encode(js);
-                                        response.end(json);
-                                    }
-                                    else{
-                                        js.put("logged_in",false);
-                                        js.put("message","Invalid Username or Password");
-                                        js.put("token","null");
-                                        String json = Json.encode(js);
-                                        response.end(json);
-                                       logger.log(Level.INFO,"Failed to authenticate");
-                                    }
-                                }
-                                catch(Exception e){
-                                    logger.log(Level.INFO,e.getMessage());
-                                    js.put("message","Invalid Username or password");
-                                    js.put("logged_in",false);
-                                    js.put("token","null");
                                     String json = Json.encode(js);
                                     response.end(json);
+                                } else {
+                                    js.put("logged_in", false);
+                                    js.put("message", "Invalid Username or Password");
+                                    js.put("token", "null");
+                                    String json = Json.encode(js);
+                                    response.end(json);
+                                    logger.log(Level.INFO, "Failed to authenticate");
                                 }
+                            } catch (Exception e) {
+                                logger.log(Level.INFO, e.getMessage());
+                                js.put("message", "Invalid Username or password");
+                                js.put("logged_in", false);
+                                js.put("token", "null");
+                                String json = Json.encode(js);
+                                response.end(json);
                             }
-                        });
+                        }
+                    });
                 }
 
             });
@@ -217,6 +210,33 @@ public class HttpVerticle extends AbstractVerticle {
         response.end(json);
     }
 
+    private void listVendors(RoutingContext context) {
+        // TODO Query Database Here
+        logger.info("list vendors request received");
+        HttpServerResponse response = context.response();
+        response.putHeader("content-type", "application/json; charset=utf-8");
+        JsonArray jsonResult = new JsonArray();
+        JsonObject item1 = new JsonObject();
+        JsonObject item2 = new JsonObject();
+        JsonObject item3 = new JsonObject();
+
+        // Sending some dummy data (TODO)
+        item1.put("name", "The Pizza Shop").put("id", "1").put("description", "The best pizza shop in town")
+                .put("logo_url", "https://www.dominos.co.in/theme2/front/images/menu-images/my-vegpizza.jpg");
+
+        item2.put("name", "The Dosa Factory").put("id", "2").put("description", "The best dosa factory in town")
+                .put("logo_url", "https://files.hungryforever.com/wp-content/uploads/2015/04/Featured-image-masala-dosa-recipe.jpg");
+
+        item3.put("name", "The Icecream Truck")
+                .put("id", "2").put("description", "Eat Icecream and chill.").put("logo_url", "https://www.seriouseats.com/2018/06/20180625-no-churn-vanilla-ice-cream-vicky-wasik-13.jpg");
+
+
+        jsonResult.add(item1).add(item2).add(item3);
+
+
+        String json = Json.encode(jsonResult);
+        response.end(json);
+    }
 
     private Future<Void> startHttpServer() {
         Future<Void> future = Future.future();
@@ -226,7 +246,8 @@ public class HttpVerticle extends AbstractVerticle {
         router.route().failureHandler(this::failureHandler);
         router.route("/api/login").handler(BodyHandler.create());
         router.post("/api/login").handler(this::loginHandler);
-        router.get("/api/list").handler(this::listItems);
+        router.get("/api/items").handler(this::listItems);
+        router.get("/api/vendors").handler(this::listVendors);
         router.route().last().handler(this::failureHandler);
 //    insertIntoDatabase("User1","E1","user1Password","123456789","user1Email@gmail.com",false);
 

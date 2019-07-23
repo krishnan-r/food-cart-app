@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/vendorListFragment">
+
+    <fragment
+        android:id="@+id/itemListFragment"
+        android:name="com.example.foodapp.ItemListFragment"
+        android:label="Vendor Name Here"
+        tools:layout="@layout/item_list_fragment">
+        <argument
+            android:name="vendor_id"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/vendorListFragment"
+        android:name="com.example.foodapp.VendorListFragment"
+        android:label="Order Food"
+        tools:layout="@layout/vendor_list_fragment">
+        <action
+            android:id="@+id/action_vendorListFragment_to_itemListFragment"
+            app:destination="@id/itemListFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/cartFragment"
+        android:name="com.example.foodapp.CartFragment"
+        android:label="cart_fragment"
+        tools:layout="@layout/cart_fragment" />
+</navigation>

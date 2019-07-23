@@ -4,20 +4,15 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.foodapp.databinding.ActivityMainBinding;
-import com.example.foodapp.databinding.ItemViewBinding;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -35,17 +30,18 @@ import retrofit2.http.POST;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
-    private ItemListAdaptor itemListAdaptor;
+    private ItemListAdapter itemListAdaptor;
     static int integerCode = 10;
     private Retrofit retrofit;
     private AppService service;
     static String EXTRA_MESSAGE ="com.example.foodApp";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this,R.layout.activity_main);
         setSupportActionBar(binding.toolbar);
-        itemListAdaptor = new ItemListAdaptor();
+        itemListAdaptor = new ItemListAdapter();
         binding.itemList.setAdapter(itemListAdaptor);
         binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -149,47 +145,4 @@ interface AppService {
 
 }
 
-
-class ItemListAdaptor extends RecyclerView.Adapter<ItemListAdaptor.ItemViewHolder> {
-
-    private List<Item> items;
-
-    public void setItems(List<Item> items){
-        this.items = items;
-        this.notifyDataSetChanged();
-    }
-
-    public void clear(){
-        items=null;
-        notifyDataSetChanged();
-    }
-
-    @NonNull
-    @Override
-    public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemViewBinding binding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.item_view, parent, false);
-        return new ItemViewHolder(binding);
-    }
-
-    @Override
-    public int getItemCount() {
-        if(items==null)
-            return 0;
-        else return items.size();
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        holder.binding.setItem(items.get(position));
-    }
-
-    public class ItemViewHolder extends RecyclerView.ViewHolder {
-        public ItemViewBinding binding;
-
-        public ItemViewHolder(ItemViewBinding binding) {
-            super(binding.getRoot());
-            this.binding = binding;
-        }
-    }
-}
 
