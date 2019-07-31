@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/profile_nav_graph"
+    app:startDestination="@id/profileSection2">
+
+    <fragment
+        android:id="@+id/userLoginHandler"
+        android:name="com.example.foodapp.userLoginHandler"
+        android:label="fragment_user_login_handler"
+        tools:layout="@layout/fragment_user_login_handler" >
+        <action
+            android:id="@+id/action_userLoginHandler_to_userSignUpFragment"
+            app:destination="@id/userSignUpFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.foodapp.editProfileFragment"
+        android:label="fragment_edit_profile"
+        tools:layout="@layout/fragment_edit_profile" />
+    <fragment
+        android:id="@+id/userSignUpFragment"
+        android:name="com.example.foodapp.userSignUpFragment"
+        android:label="fragment_user_sign_up"
+        tools:layout="@layout/fragment_user_sign_up" />
+    <fragment
+        android:id="@+id/profileSection2"
+        android:name="com.example.foodapp.profileSection"
+        android:label="fragment_profile_section"
+        tools:layout="@layout/fragment_profile_section" >
+        <action
+            android:id="@+id/action_profileSection2_to_userLoginHandler"
+            app:destination="@id/userLoginHandler" />
+        <action
+            android:id="@+id/action_profileSection2_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
+    </fragment>
+</navigation>

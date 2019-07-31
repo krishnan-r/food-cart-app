@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".userSignUpFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:scrollbars="vertical">
+
+        <EditText
+            android:id="@+id/nameID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/signUpName"
+            android:inputType="textPersonName"
+            android:translationX="100dp"
+            android:translationY="75dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="65dp" />
+
+        <EditText
+            android:id="@+id/eid_ID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="96dp"
+            android:ems="10"
+            android:hint="@string/signUpEmployee_id"
+            android:inputType="textPersonName"
+            android:translationX="100dp"
+            android:translationY="100dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:layout_editor_absoluteY="135dp" />
+
+        <Button
+            android:id="@+id/signup_ID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:text="@string/SignUp"
+            android:textColor="@android:color/background_light"
+            android:translationX="160dp"
+            android:translationY="430dp"
+            android:layout_marginBottom="56dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="451dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+
+            app:layout_constraintHorizontal_bias="0.464"/>
+
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/password"
+            android:translationX="100dp"
+            android:translationY="0dp"
+            app:passwordToggleEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/pwdID"
+                android:layout_width="wrap_content"
+                android:layout_height="59dp"
+                android:ems="10"
+                android:inputType="textPassword"
+                android:translationY="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <EditText
+            android:id="@+id/phNoID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/signUpMobile"
+            android:inputType="number"
+            android:translationX="100dp"
+            android:translationY="80dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="415dp" />
+
+        <EditText
+            android:id="@+id/cnfrmpwdID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/signUpConfirmPassword"
+            android:inputType="textPassword"
+            android:translationX="100dp"
+            android:translationY="-30dp"
+            tools:layout_editor_absoluteX="99dp"
+            tools:layout_editor_absoluteY="275dp" />
+
+        <CheckBox
+            android:id="@+id/checkBoxID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tNc"
+            android:translationX="75dp"
+            android:translationY="120dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="400dp" />
+
+        <EditText
+            android:id="@+id/emailID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/signUpEmail"
+            android:inputType="textEmailAddress"
+            android:translationX="100dp"
+            android:translationY="25dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="345dp" />
+    </LinearLayout>
+
+</FrameLayout>

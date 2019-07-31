@@ -4,4 +4,27 @@
     <string name="password">Password</string>
     <string name="submit">Submit</string>
 
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="newUser">New User? Click here to SignUp</string>
+    <!--<string name="isVendor">Logging in as User. Click here to login as a Vendor</string>-->
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+    <string name="loginUser">Login as User</string>
+    <string name="loginVendor">Login as Vendor</string>
+    <string name="signUpName">Name</string>
+    <string name="signUpPassword">Enter Password</string>
+    <string name="signUpMobile">Mobile Number</string>
+    <string name="signUpEmployee_id">Employee ID</string>
+    <string name="signUpEmail">Email</string>
+    <string name="SignUp">Sign Up</string>
+    <string name="signUpConfirmPassword">Confirm Password</string>
+    <string name="tNc">I agree to the Terms and Conditions</string>
+    <string name="requiredSignIn">Login Required. Redirecting...</string>
+    <string name="changePassword">Change Password</string>
+    <string name="reEnterNewPassword">Confirm new password</string>
+    <string name="oldPassword">Old Password</string>
+    <string name="newPassword">New Password</string>
+
+
 </resources>
