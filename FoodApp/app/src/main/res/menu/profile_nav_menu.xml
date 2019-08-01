@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/userLoginHandler"
+        android:icon="@drawable/ic_account_black_24dp"
+        android:title="Login / Sign Up" />
+
+    <item
+        android:id="@+id/editProfileFragment"
+        android:icon="@drawable/ic_edit_black_24dp"
+        android:title="Edit Profile" />
+
+    <item
+        android:id="@+id/viewOrdersFragment"
+        android:icon="@drawable/ic_scroll"
+        android:title="My Orders " />
+
+    <item
+        android:id="@+id/LogoutFragment"
+        android:icon="@drawable/ic_logout"
+        android:title="Logout" />
+
+    <!--<div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/"                 title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"                 title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>-->
+</menu>

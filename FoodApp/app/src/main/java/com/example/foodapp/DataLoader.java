@@ -34,7 +34,13 @@ public class DataLoader {
 
         @FormUrlEncoded
         @POST("login")
-        Call<LoginObject> verifyUser(@Body JsonObject json);
+        Call<LoginObject> authentication(@Body JsonObject loginInfo);
+
+        @POST("signUp")
+        Call<SignUpObject> registerUser(@Body JsonObject signUpInfo);
+
+        @POST("editProfile") // TODO:only change password implemented ,otp for phone number / email change
+        Call<editProfileObject> changePassword(@Body JsonObject passwordInfo);
     }
 
     private Retrofit retrofit;
@@ -74,6 +80,22 @@ public class DataLoader {
     void get_orders(String vendor_id, Callback<List<Vendor_orders>> callback)
     {
         Call<List<Vendor_orders>> request = service.get_orders();
+        request.enqueue(callback);
+    }
+
+
+    void authentication(JsonObject loginInfo,Callback<LoginObject> callback){
+        Call<LoginObject> request = service.authentication(loginInfo);
+        request.enqueue(callback);
+    }
+
+    void registerUser(JsonObject signUpInfo,Callback<SignUpObject> callback){
+        Call<SignUpObject> request = service.registerUser(signUpInfo);
+        request.enqueue(callback);
+    }
+
+    void changePassword(JsonObject passwordInfo,Callback<editProfileObject> callback){
+        Call<editProfileObject> request = service.changePassword(passwordInfo);
         request.enqueue(callback);
     }
 

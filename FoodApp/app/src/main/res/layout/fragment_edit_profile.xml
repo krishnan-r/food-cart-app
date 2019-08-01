@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".editProfileFragment">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="wrap_content"
+        android:hint="@string/oldPassword"
+        app:passwordToggleEnabled="true"
+        android:translationX="100dp"
+        android:translationY="150dp"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="59dp"
+            android:ems="10"
+            android:id="@+id/oldpasswordID"
+            android:inputType="textPassword"/>
+
+
+    </com.google.android.material.textfield.TextInputLayout>
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="wrap_content"
+        android:hint="@string/newPassword"
+        app:passwordToggleEnabled="true"
+        android:translationX="100dp"
+        android:translationY="225dp"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="59dp"
+            android:ems="10"
+            android:id="@+id/newpasswordID"
+            android:inputType="textPassword"/>
+
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <EditText
+        android:id="@+id/reEnterNewPasswordId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPassword"
+        android:translationX="100dp"
+        android:translationY="325dp"
+        android:hint="@string/reEnterNewPassword"/>
+
+    <Button
+        android:id="@+id/changePasswordId"
+        android:layout_width="129dp"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:text="@string/changePassword"
+        android:textAllCaps="false"
+        android:textColor="@color/cardview_light_background"
+        android:translationX="145dp"
+        android:translationY="425dp" />
+
+
+</FrameLayout>

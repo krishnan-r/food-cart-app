@@ -28,4 +28,5 @@
         android:name="com.example.foodapp.CartFragment"
         android:label="cart_fragment"
         tools:layout="@layout/cart_fragment" />
+    <!--<include app:graph="@navigation/profile_nav_graph"/>-->
 </navigation>
