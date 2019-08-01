@@ -122,6 +122,7 @@ class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemViewHolde
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         holder.binding.setItem(items.get(position));
+
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
