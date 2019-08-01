@@ -6,9 +6,11 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
@@ -24,6 +26,13 @@ public class DataLoader {
         @GET("cart")
         Call<List<CartItem>> getCartItems();
 
+        @GET("get_orders")
+        Call<List<Vendor_orders>> get_orders();
+
+        @GET("get_menu")
+        Call<List<Item>> get_menu();
+
+        @FormUrlEncoded
         @POST("login")
         Call<LoginObject> verifyUser(@Body JsonObject json);
     }
@@ -59,6 +68,20 @@ public class DataLoader {
     void getCartItems(Callback<List<CartItem>> callback){
         Call<List<CartItem>> request = service.getCartItems();
         request.enqueue(callback);
+
     }
+
+    void get_orders(String vendor_id, Callback<List<Vendor_orders>> callback)
+    {
+        Call<List<Vendor_orders>> request = service.get_orders();
+        request.enqueue(callback);
+    }
+
+    void get_menu(String vendor_id, Callback<List<Item>> callback)
+    {
+        Call<List<Item>> request = service.get_menu();
+        request.enqueue(callback);
+    }
+
 }
 

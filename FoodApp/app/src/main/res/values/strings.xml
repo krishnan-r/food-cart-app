@@ -3,5 +3,10 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="submit">Submit</string>
+    <string name="show_orders">show_orders</string>
+    <string name="change_password">change password</string>
+    <string name="add_menu">Add to Menu</string>
+    <string name="delete_menu">Delete from Menu</string>
+    <string name="update_delivery">Update Delivery</string>
 
 </resources>
