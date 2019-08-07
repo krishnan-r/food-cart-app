@@ -30,6 +30,7 @@
     <string name="reEnterNewPassword">Confirm new password</string>
     <string name="oldPassword">Old Password</string>
     <string name="newPassword">New Password</string>
+    <string name="goodbye">Good Bye! Hope you enjoyed our Service...</string>
 
 
 </resources>

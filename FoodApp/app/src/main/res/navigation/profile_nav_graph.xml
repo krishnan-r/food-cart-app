@@ -35,5 +35,13 @@
         <action
             android:id="@+id/action_profileSection2_to_editProfileFragment"
             app:destination="@id/editProfileFragment" />
+        <action
+            android:id="@+id/action_profileSection2_to_logout"
+            app:destination="@id/logout" />
     </fragment>
+    <!--<fragment-->
+        <!--android:id="@+id/logout"-->
+        <!--android:name="com.example.foodapp.logout"-->
+        <!--android:label="fragment_logout"-->
+        <!--tools:layout="@layout/fragment_logout" />-->
 </navigation>

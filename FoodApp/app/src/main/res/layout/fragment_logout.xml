@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".logout">
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/goodbye"
+        android:translationY="200dp"
+        android:textAlignment="center"
+        android:textSize="30dp"
+        android:textColor="@color/cardview_dark_background"/>
+
+    <Button
+        android:id="@+id/switchUserID"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:text="Switch User"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/cardview_light_background"
+        android:textAllCaps="false"
+        android:layout_gravity="center_horizontal"
+        android:translationY="400dp"/>
+
+</FrameLayout>
