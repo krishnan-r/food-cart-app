@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,8 +48,7 @@ public class editProfileFragment extends Fragment {
                                 changePwd.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-//                                        Snackbar.make(view,viewModel.username,Snackbar.LENGTH_LONG).show();
-                                        changeUserPassword(viewModel.username,view);
+                                       changeUserPassword(viewModel.username,view);
                                     }
                                 });
 
@@ -64,41 +64,59 @@ public class editProfileFragment extends Fragment {
     }
 
     private void changeUserPassword(String username,final View view){
+        boolean error = false;
         LoginViewModel loginViewModel = new LoginViewModel();
         EditText oldpassword = (EditText)view.findViewById(R.id.oldpasswordID);
         EditText newpassword = (EditText)view.findViewById(R.id.newpasswordID);
         EditText newpassword2 = (EditText)view.findViewById(R.id.reEnterNewPasswordId);
 
-        if (!newpassword.getText().toString().equals(newpassword2.getText().toString())) {
-               Snackbar.make(view, "Password and confirm password must match", Snackbar.LENGTH_SHORT);
-//            restartFragment();
+        if(TextUtils.isEmpty(oldpassword.getText())){
+            oldpassword.setError("Password cannot be empty");
+            error = true;
         }
-        JsonObject pwdInfo  = new JsonObject();
-        pwdInfo.addProperty("username",username);
-        pwdInfo.addProperty("password",oldpassword.getText().toString());
-        pwdInfo.addProperty("newPassword",newpassword.getText().toString());
-        pwdInfo.addProperty("editField","password");
+
+        if(TextUtils.isEmpty(newpassword.getText())){
+            newpassword.setError("New password cannot be empty");
+            error = true;
+        }
+
+        if(TextUtils.isEmpty(newpassword2.getText())){
+            newpassword2.setError("Confirm password cannot be empty");
+            error = true;
+        }
+
+        if (!newpassword.getText().toString().equals(newpassword2.getText().toString())) {
+            newpassword2.setError("new password and confirm password must match");
+              error = true;
+        }
+
+        if(!error) {
+            JsonObject pwdInfo = new JsonObject();
+            pwdInfo.addProperty("username", username);
+            pwdInfo.addProperty("password", oldpassword.getText().toString());
+            pwdInfo.addProperty("newPassword", newpassword.getText().toString());
+            pwdInfo.addProperty("editField", "password");
 //            Snackbar.make(view,pwdInfo.toString(),Snackbar.LENGTH_LONG).show();
             DataLoader dataLoader = DataLoader.getInstance();
             dataLoader.changePassword(pwdInfo, new Callback<editProfileObject>() {
                 @Override
                 public void onResponse(Call<editProfileObject> call, Response<editProfileObject> response) {
+                    Snackbar.make(view, response.body().message, Snackbar.LENGTH_SHORT).show();
+                    if (response.body().edit_success) {
+                        NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment2);
+                        navController.popBackStack();
+                    }
 
-                    if(response.body().edit_success){
-                         Snackbar.make(view,response.body().message, Snackbar.LENGTH_SHORT).show();
-                    }
-                    else{
-                        Snackbar.make(view,response.body().message, Snackbar.LENGTH_SHORT).show();
-                    }
                 }
 
                 @Override
                 public void onFailure(Call<editProfileObject> call, Throwable t) {
-                      Snackbar.make(view,t.getMessage(), Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(view, t.getMessage(), Snackbar.LENGTH_SHORT).show();
 
                 }
             });
-           // TODO:  add  signup.. load orders
+            // TODO:. load orders, logout
+        }
     }
 
 
