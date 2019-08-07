@@ -16,6 +16,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+
+        <activity android:name=".Vendor_update_delivery"></activity>
+        <activity android:name=".Vendor_change_password" />
+        <activity android:name=".Vendor_delete_menu" />
+        <activity android:name=".Vendor_add_menu" />
+        <activity android:name=".vendor_show_orders" />
+        <activity android:name=".Vendor_main" />
+
         <activity
             android:name=".OrderActivity"
             android:label="Order Food">
@@ -25,6 +33,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <activity android:name=".LoginHandlerActivity" />
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
